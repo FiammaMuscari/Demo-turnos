@@ -18,6 +18,11 @@ delete .git folder (oculto)
 make a new github repo and
 deploy project
 
+actualizar
+NEXT_PUBLIC_APP_URL en la variable de entorno de vercel
+junto a la variable de entorno de google para la usar el provider de google y su api, generando al key que ira en esa variable de entorno.
+recuerda que localmente el env de public url debera ser NEXT_PUBLIC_APP_URL=http://localhost:3000
+
 6to
 go to
 https://console.developers.google.com/apis/credentials
@@ -25,6 +30,12 @@ create project
 
 oath credentials
 configurar pantalla de consentimiento url deploy
+llenamos como aparece en las imagenes
+luego en credenciales creamos el cliente oauth
+es para integrar nuestro provider en produccion
+aca obtenemos el GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET
+
+vamos a agregar estas variables de entorno en los setings de vercel y hacer un push para ver los cambios en prod.
 
 7to
 google keys
