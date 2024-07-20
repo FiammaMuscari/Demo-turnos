@@ -1,22 +1,52 @@
-steps
+# Pasos / steps
 
-1st
-copiar el repo git bash clone here
+## 1st
 
-2do npm install no importa lo deprecadito
+Copiar el repo git bash clone here.
+Copy with git bash here.
 
-3ro
-keys database from connection string + password
-DATABASE_URL add at the end of the url "&pgbouncer=true"
-DIRECT_URL
+![git_clone_bash](./public/readme/1.webp)
 
-4to
-run npx prism db push and db will show on neontech
-or the postgress database u use
-5to
-delete .git folder (oculto)
-make a new github repo and
-deploy project
+## 2do
+
+npm install no importa lo deprecadito. We do an npm install and dont worry about warnings.
+
+## 3ro
+
+Agrega las variables de entorno para conectar la base de dato, como se ve en la siguiente imagen copia la url completa más el password.Agrega DIRECT_URL y DATABASE_URL, a esta ultima agregale la siguiente linea.
+Add keys from database to connect, it will be string + password.DIRECT_URL
+DATABASE_URL and add at the end of the url the next line:
+
+```
+&pgbouncer=true
+```
+
+![url_with_pass](./public/readme/2.webp)
+Example:
+
+```
+DATABASE_URL="postgresql://demo-turnos_owner:HtZf7a5ieXyx@ep-jolly-feather-a4rfb11l.us-east-1.aws.neon.tech/demo-turnos?sslmode=require&pgbouncer=true"
+DIRECT_URL="postgresql://demo-turnos_owner:HtZf7a5ieXyx@ep-jolly-feather-a4rfb11l.us-east-1.aws.neon.tech/demo-turnos?sslmode=require"
+```
+
+## 4to
+
+Run / corre.
+
+```
+npx prism db push
+```
+
+Y la base de datos se mostrara automaticamente en las tablas de Neontech o en la base de datos Postgress de preferencia.
+And our db it will show on neontechl, we can search on tables or use another postgress db.
+
+## 5to
+
+Elimina la carpeta .git oculta. Delete .git folder (protected).
+
+![git_folder](./public/readme/3.webp)
+
+Crea un nuevo repo en github y hace el deploy. Make a new github repo and deploy project on Vercel.
 
 actualizar
 NEXT_PUBLIC_APP_URL en la variable de entorno de vercel
