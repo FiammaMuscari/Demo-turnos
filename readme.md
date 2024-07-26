@@ -1,6 +1,6 @@
 # Pasos / steps
 
-## 1st
+## 1ro
 
 Copiar el repo git bash clone here.
 Copy with git bash here.
@@ -46,14 +46,25 @@ Elimina la carpeta .git oculta. Delete .git folder (protected).
 
 ![git_folder](./public/readme/3.webp)
 
-Crea un nuevo repo en github y hace el deploy. Make a new github repo and deploy project on Vercel.
+Crea un nuevo repo en github y hace el deploy. Make a new github repo and deploy it on Vercel.
 
-actualizar
-NEXT_PUBLIC_APP_URL en la variable de entorno de vercel
-junto a la variable de entorno de google para la usar el provider de google y su api, generando al key que ira en esa variable de entorno.
-recuerda que localmente el env de public url debera ser NEXT_PUBLIC_APP_URL=http://localhost:3000
+## 6to
 
-6to
+Actualizar NEXT_PUBLIC_APP_URL en la variable de entorno de vercel
+junto a la variable de entorno de google para la usar el provider y su api, generar la key
+
+Update NEXT_PUBLIC_APP_URL from vercel deploy settings, also google one to use api and provider.
+
+_(recuerda que localmente el env de public url debera ser NEXT_PUBLIC_APP_URL=http://localhost:3000)_
+
+_(use NEXT_PUBLIC_APP_URL=http://localhost:3000 locally)_
+
+## 7mo
+
+Ir a la consola de google apis credentials
+https://console.developers.google.com/apis/credentials
+Crea el projecto
+
 go to
 https://console.developers.google.com/apis/credentials
 create project
