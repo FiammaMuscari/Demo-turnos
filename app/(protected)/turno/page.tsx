@@ -114,27 +114,22 @@ const ClientPage: React.FC = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
+    console.log("Fecha seleccionada:", selectedDate); // Verifica el valor de selectedDate
     if (!selectedDate || !selectedTime || selectedServices.length === 0) {
       toast({
         title: "Error",
-
         description:
           "Por favor, complete todos los campos para agendar el turno",
-
         variant: "destructive",
       });
-
       return;
     }
 
     try {
       const { redirectUrl } = await payment(totalPrice, {
         userName: userDetails?.name || "",
-
         userEmail: userDetails?.email || "",
-
-        date: selectedDate,
-
+        date: selectedDate, // Asegúrate de que se esté enviando la fecha seleccionada
         time: selectedTime,
         services: selectedServices.map((service) => service.name),
       });
@@ -142,7 +137,6 @@ const ClientPage: React.FC = () => {
       window.location.href = redirectUrl;
     } catch (error) {
       console.error("Error durante el pago:", error);
-
       setError("Algo salió mal durante el pago");
     }
   };
