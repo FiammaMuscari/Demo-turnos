@@ -114,7 +114,7 @@ const ClientPage: React.FC = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
-    console.log("Fecha seleccionada:", selectedDate); // Verifica el valor de selectedDate
+    console.log("Fecha seleccionada:", selectedDate);
     if (!selectedDate || !selectedTime || selectedServices.length === 0) {
       toast({
         title: "Error",
@@ -129,9 +129,12 @@ const ClientPage: React.FC = () => {
       const { redirectUrl } = await payment(totalPrice, {
         userName: userDetails?.name || "",
         userEmail: userDetails?.email || "",
-        date: selectedDate, // Asegúrate de que se esté enviando la fecha seleccionada
+        date: selectedDate,
         time: selectedTime,
-        services: selectedServices.map((service) => service.name),
+        services: selectedServices.map((service) => ({
+          name: service.name,
+          price: parseFloat(service.price),
+        })),
       });
 
       window.location.href = redirectUrl;
