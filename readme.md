@@ -1,92 +1,139 @@
-# Pasos / steps
+# Pasos / Steps
 
-## 1ro
+## 1ro / 1st
 
-Copiar el repo git bash clone here.
+Copiar el repo git bash clone here.  
 Copy with git bash here.
 
 ![git_clone_bash](./public/readme/1.webp)
 
-## 2do
+## 2do / 2nd
 
-npm install no importa lo deprecadito. We do an npm install and dont worry about warnings.
+npm install no importa lo deprecadito.  
+We do an npm install and don't worry about warnings.
 
-## 3ro
+## 3ro / 3rd
 
-Agrega las variables de entorno para conectar la base de dato, como se ve en la siguiente imagen copia la url completa más el password.Agrega DIRECT_URL y DATABASE_URL, a esta ultima agregale la siguiente linea.
-Add keys from database to connect, it will be string + password.DIRECT_URL
-DATABASE_URL and add at the end of the url the next line:
+Agrega las variables de entorno para conectar la base de datos, como se ve en la siguiente imagen.  
+Add environment variables to connect to the database, as shown in the following image.
+
+Copia la URL completa más el password.  
+Copy the full URL plus the password.
+
+Agrega `DIRECT_URL` y `DATABASE_URL`, a esta última agrégale la siguiente línea:  
+Add `DIRECT_URL` and `DATABASE_URL`, and to the latter add the following line:
 
 ```
 &pgbouncer=true
 ```
 
 ![url_with_pass](./public/readme/2.webp)
-Example:
+
+**Ejemplo / Example:**
 
 ```
 DATABASE_URL="postgresql://demo-turnos_owner:HtZf7a5ieXyx@ep-jolly-feather-a4rfb11l.us-east-1.aws.neon.tech/demo-turnos?sslmode=require&pgbouncer=true"
 DIRECT_URL="postgresql://demo-turnos_owner:HtZf7a5ieXyx@ep-jolly-feather-a4rfb11l.us-east-1.aws.neon.tech/demo-turnos?sslmode=require"
 ```
 
-## 4to
+## 4to / 4th
 
-Run / corre.
+Run / Corre.
 
 ```
 npx prism db push
 ```
 
-Y la base de datos se mostrara automaticamente en las tablas de Neontech o en la base de datos Postgress de preferencia.
-And our db it will show on neontechl, we can search on tables or use another postgress db.
+Y la base de datos se mostrará automáticamente en las tablas de Neontech o en la base de datos Postgres de preferencia.  
+And our database will automatically show up in Neontech tables or in the preferred Postgres database.
 
-## 5to
+## 5to / 5th
 
-Elimina la carpeta .git oculta. Delete .git folder (protected).
+Elimina la carpeta `.git` oculta.  
+Delete the hidden `.git` folder (protected).
 
 ![git_folder](./public/readme/3.webp)
 
-Crea un nuevo repo en github y hace el deploy. Make a new github repo and deploy it on Vercel.
+Crea un nuevo repo en GitHub y haz el deploy.  
+Create a new GitHub repo and deploy it on Vercel.
 
-## 6to
+## 6to / 6th
 
-Actualizar NEXT_PUBLIC_APP_URL en la variable de entorno de vercel
-junto a la variable de entorno de google para la usar el provider y su api, generar la key
+Actualizar `NEXT_PUBLIC_APP_URL` en la variable de entorno de Vercel junto a la variable de entorno de Google para usar el provider y su API, generar la key.  
+Update `NEXT_PUBLIC_APP_URL` from Vercel deploy settings, also the Google one to use API and provider.
 
-Update NEXT_PUBLIC_APP_URL from vercel deploy settings, also google one to use api and provider.
+_(Recuerda que localmente el env de public URL deberá ser `NEXT_PUBLIC_APP_URL=http://localhost:3000`)_  
+_(Remember that locally the public URL env should be `NEXT_PUBLIC_APP_URL=http://localhost:3000`)_
 
-_(recuerda que localmente el env de public url debera ser NEXT_PUBLIC_APP_URL=http://localhost:3000)_
+## 7mo / 7th
 
-_(use NEXT_PUBLIC_APP_URL=http://localhost:3000 locally)_
+Ir a la consola de Google APIs credentials.  
+Go to the Google APIs credentials console.
 
-## 7mo
+Crea el proyecto.  
+Create the project.
 
-Ir a la consola de google apis credentials
-https://console.developers.google.com/apis/credentials
-Crea el projecto
+Visita:  
+https://console.developers.google.com/apis/credentials  
+Create project.
 
-go to
-https://console.developers.google.com/apis/credentials
-create project
+**OAuth credentials:**  
+Configurar pantalla de consentimiento URL deploy.  
+In credentials, create the OAuth client.  
+This is to integrate our provider in production.  
+Aquí obtenemos el `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.  
+Here we obtain the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
 
-oath credentials
-configurar pantalla de consentimiento url deploy
-llenamos como aparece en las imagenes
-luego en credenciales creamos el cliente oauth
-es para integrar nuestro provider en produccion
-aca obtenemos el GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET
+![cred_config](./public/readme/4.webp)
 
-vamos a agregar estas variables de entorno en los setings de vercel y hacer un push para ver los cambios en prod.
+Vamos a agregar estas variables de entorno en los settings de Vercel y hacer un push para ver los cambios en producción.  
+We will add these environment variables in the Vercel settings and push to see the changes in production.
 
-7to
-google keys
+También modificamos el URI para usar localmente y en producción nuestro inicio de sesión con Google.  
+We also modify the URI to use locally and in production for our Google login.
+![uri_config](./public/readme/5.webp)
 
-logear con el mail para usar de admin, crea el user en la db
+## 8vo / 8th
 
-8to
-add services and admin by using the next query
+Logear con el mail para usar de admin, crea el user en la DB.  
+Log in with the email to use as admin, create the user in the DB.
+
+## 9no / 9th
+
+Agregar servicios y admin usando la siguiente consulta:  
+Add services and admin by using the next query:
+
+```
 UPDATE "User"
 SET role = 'ADMIN'
 WHERE id ="id-from-user-here"
+```
 
-9vo done
+## 10mo / 10th
+
+Mercado Pago
+
+https://www.mercadopago.com.ar/developers/es
+
+tus integraciones > crear aplicación  
+Your integrations > create application  
+![mp_config](./public/readme/6.webp)  
+importante elegir CheckoutPro  
+important to choose CheckoutPro
+
+Ahora vamos a Credenciasles de producción > seleccionamos una industria y activamos credenciales de producción, recomiendo tener el deploy hecho en esta instancia.  
+Now we go to Production Credentials > select an industry and activate production credentials, I recommend having the deploy done at this stage.
+
+De acá obtenemos el Acces Token, lo unico en vez de usar APP_USR vamos a usar TEST para testear nuestra app primero.  
+From here we obtain the Access Token, the only thing is that instead of using APP_USR we will use TEST to test our app first.  
+![mp_config2](./public/readme/7.webp)
+
+```
+MP_ACCESS_TOKEN=TEST-1043861622129703-101301-6f99886c5140a0dc316fee6da2e99aca-318253112
+```
+
+¡Listo!, Done
+
+Ahora al iniciar sesión como admin se puede agregar precios a los servicios, ver turnos y más.
+
+You can log in now as admin, add prices to services, see appointments, and more.
