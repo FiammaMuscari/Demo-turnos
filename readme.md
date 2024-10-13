@@ -128,9 +128,10 @@ important to choose CheckoutPro
 Ahora vamos a Credenciasles de producción > seleccionamos una industria y activamos credenciales de producción, recomiendo tener el deploy hecho en esta instancia.  
 Now we go to Production Credentials > select an industry and activate production credentials, I recommend having the deploy done at this stage.
 
-De acá obtenemos el Acces Token, lo unico en vez de usar APP_USR vamos a usar TEST para testear nuestra app primero.  
-From here we obtain the Access Token, the only thing is that instead of using APP_USR we will use TEST to test our app first.  
+De acá obtenemos el Acces Token, lo unico en vez de usar APP_USR vamos a usar TEST para testear nuestra app primero. Recordar hacerlo en la variable de entorno del deploy.
+From here we obtain the Access Token, the only thing is that instead of using APP_USR we will use TEST to test our app first. Remember to set this in the environment variable for the deployment.  
 ![mp_config2](./public/readme/7.webp)
+![mp_config3](./public/readme/12.webp)
 
 ```
 MP_ACCESS_TOKEN=TEST-1043861622129703-101301-6f99886c5140a0dc316fee6da2e99aca-318253112
