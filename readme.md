@@ -106,9 +106,10 @@ Add services and admin by using the next query:
 ```
 UPDATE "User"
 SET role = 'ADMIN'
-WHERE id ="id-from-user-here"
+WHERE id = 'id-from-user-here';
 ```
-
+![admin](./public/readme/8.webp)
+![admin2](./public/readme/9.webp)
 ## 10mo / 10th
 
 Mercado Pago
