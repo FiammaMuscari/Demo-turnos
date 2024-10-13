@@ -5,8 +5,8 @@ async function handler(request: Request) {
   const response = JSON.parse(rawBody);
   const objId = response && response["data"]["id"];
 
-  console.log("hola:", objId);
-  console.log("response::", response);
+  console.log("objId:", objId);
+  console.log("response:", response);
   return NextResponse.json({}, { status: 200 });
 }
 export const POST = handler;
