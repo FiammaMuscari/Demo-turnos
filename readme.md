@@ -108,8 +108,11 @@ UPDATE "User"
 SET role = 'ADMIN'
 WHERE id = 'id-from-user-here';
 ```
+
 ![admin](./public/readme/8.webp)
 ![admin2](./public/readme/9.webp)
+![admin3](./public/readme/10.webp)
+
 ## 10mo / 10th
 
 Mercado Pago
@@ -133,8 +136,14 @@ From here we obtain the Access Token, the only thing is that instead of using AP
 MP_ACCESS_TOKEN=TEST-1043861622129703-101301-6f99886c5140a0dc316fee6da2e99aca-318253112
 ```
 
-¡Listo!, Done
+## 11mo / 11th
 
-Ahora al iniciar sesión como admin se puede agregar precios a los servicios, ver turnos y más.
+Modificamos nuestra variable de enorno en produccion para NEXT_PUBLIC_APP_URL así funcionara nuestro sandbox y preferencia de mercado pago en el deploy.  
+We modify our environment variable in production for NEXT_PUBLIC_APP_URL so that our sandbox and Mercado Pago preferences work in the deploy.
 
-You can log in now as admin, add prices to services, see appointments, and more.
+![mp_config3](./public/readme/11.webp)
+
+¡Listo!, Done!
+
+Ahora al iniciar sesión como admin se puede agregar precios a los servicios, ver turnos y más.  
+Now you can log in as admin, add prices to services, see appointments, and more.
