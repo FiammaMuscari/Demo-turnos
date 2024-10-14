@@ -166,38 +166,41 @@ const ClientPage: React.FC = () => {
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
-
     const collectionStatus = queryParams.get("collection_status");
 
     if (collectionStatus === "approved") {
       const scheduleAppointment = async (
         values: z.infer<typeof AppointmentSchema>
       ) => {
+        const updatedValues = {
+          ...values,
+          date: selectedDate,
+          time: selectedTime,
+          services: selectedServices.map((service) => service.name),
+        };
+
+        if (
+          !updatedValues.date ||
+          !updatedValues.time ||
+          updatedValues.services.length === 0
+        ) {
+          console.error("Error: Datos incompletos para crear la cita.");
+          setError(
+            "No se puede agendar el turno. Por favor, completa todos los campos."
+          );
+          return;
+        }
+
         try {
-          const updatedValues = {
-            ...values,
-
-            date: selectedDate || "",
-
-            time: selectedTime || "",
-
-            services: selectedServices.map((service) => service.name),
-          };
-
           await createAppointment(updatedValues);
-
           update();
-
           setSuccess("Turno agendado exitosamente");
-
           toast({
             title: "Turno agendado",
-
             description: `El día ${selectedDate}`,
           });
         } catch (error) {
           console.error("Error al agendar el turno:", error);
-
           setError("Hubo un error al agendar el turno");
         }
       };

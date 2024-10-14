@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server";
-import { createAppointment } from "@/actions/appointments"; // Asegúrate de importar la función
+import { createAppointment } from "@/actions/appointments";
 
 async function handler(request: Request) {
   const rawBody = await request.text();
   const response = JSON.parse(rawBody);
-  const collectionStatus = response?.data?.collection_status;
 
-  console.log("Respuesta de Mercado Pago:", response); // Agrega este log para depuración
+  console.log("Respuesta de Mercado Pago:", response);
+
+  const collectionStatus = response?.data?.collection_status;
 
   if (collectionStatus === "approved") {
     const appointmentData = {
       userName: response.data.userName || "",
       userEmail: response.data.userEmail || "",
-      date: response.data.date || "", // Asegúrate de que este campo esté presente
+      date: response.data.date || "",
       time: response.data.time || "",
       services: response.data.services || [],
     };
 
-    // Validar que la fecha no sea nula
     if (!appointmentData.date) {
       console.error("Error: La fecha del turno es nula");
       return NextResponse.json(
@@ -35,4 +35,3 @@ async function handler(request: Request) {
 
   return NextResponse.json({}, { status: 200 });
 }
-export const POST = handler;
