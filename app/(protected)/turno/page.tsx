@@ -114,8 +114,24 @@ const ClientPage: React.FC = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
-    console.log("Fecha seleccionada:", selectedDate);
-    if (!selectedDate || !selectedTime || selectedServices.length === 0) {
+    console.log("Datos del formulario antes de enviar:", values);
+    const updatedValues = {
+      ...values,
+      date: selectedDate,
+      time: selectedTime,
+      services: selectedServices.map((service) => ({
+        name: service.name,
+        price: parseFloat(service.price),
+      })),
+    };
+    localStorage.setItem("updatedValues", JSON.stringify(updatedValues))
+    console.log("Valores actualizados para enviar:", updatedValues);
+
+    if (
+      !updatedValues.date ||
+      !updatedValues.time ||
+      updatedValues.services.length === 0
+    ) {
       toast({
         title: "Error",
         description:
@@ -129,14 +145,15 @@ const ClientPage: React.FC = () => {
       const { redirectUrl } = await payment(totalPrice, {
         userName: userDetails?.name || "",
         userEmail: userDetails?.email || "",
-        date: selectedDate,
-        time: selectedTime,
+        date: selectedDate || "",
+        time: selectedTime || "",
         services: selectedServices.map((service) => ({
           name: service.name,
           price: parseFloat(service.price),
         })),
       });
 
+      console.log("Redirigiendo a:", redirectUrl);
       window.location.href = redirectUrl;
     } catch (error) {
       console.error("Error durante el pago:", error);
@@ -145,39 +162,49 @@ const ClientPage: React.FC = () => {
   };
 
   const handleServiceSelection = (service: Service) => {
+    console.log("Servicio seleccionado:", service);
     const isServiceSelected = selectedServices.some(
       (s) => s.name === service.name
     );
-
     if (isServiceSelected) {
       const updatedServices = selectedServices.filter(
         (s) => s.name !== service.name
       );
-
+      console.log(
+        "Servicios actualizados después de la deselección:",
+        updatedServices
+      );
       setSelectedServices(updatedServices);
     } else {
       setSelectedServices([...selectedServices, service]);
+      console.log("Servicios actualizados después de la selección:", [
+        ...selectedServices,
+        service,
+      ]);
     }
   };
 
   const handleTimeSelection = (time: string) => {
+    console.log("Hora seleccionada:", time);
     setSelectedTime(time);
   };
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const collectionStatus = queryParams.get("collection_status");
+    console.log("Estado de la colección:", collectionStatus);
 
     if (collectionStatus === "approved") {
-      const scheduleAppointment = async (
-        values: z.infer<typeof AppointmentSchema>
-      ) => {
+      const scheduleAppointment = async () => {
         const updatedValues = {
-          ...values,
-          date: selectedDate,
-          time: selectedTime,
+          userName: userDetails?.name || "",
+          userEmail: userDetails?.email || "",
+          date: selectedDate || "",
+          time: selectedTime || "",
           services: selectedServices.map((service) => service.name),
         };
+
+        console.log("Agendando cita con los siguientes datos:", updatedValues);
 
         if (
           !updatedValues.date ||
@@ -205,10 +232,17 @@ const ClientPage: React.FC = () => {
         }
       };
 
-      scheduleAppointment(form.getValues());
+      scheduleAppointment();
     }
-  }, [form, selectedDate, selectedServices, selectedTime, toast, update]);
-
+  }, [
+    selectedDate,
+    selectedServices,
+    selectedTime,
+    toast,
+    update,
+    userDetails?.email,
+    userDetails?.name,
+  ]);
   return (
     <>
       <Form {...form}>
