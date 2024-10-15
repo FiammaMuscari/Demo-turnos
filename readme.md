@@ -27,8 +27,6 @@ Add `DIRECT_URL` and `DATABASE_URL`, and to the latter add the following line:
 &pgbouncer=true
 ```
 
-![url_with_pass](./public/readme/2.webp)
-
 **Ejemplo / Example:**
 
 ```
@@ -111,7 +109,6 @@ WHERE id = 'id-from-user-here';
 
 ![admin](./public/readme/8.webp)
 ![admin2](./public/readme/9.webp)
-![admin3](./public/readme/10.webp)
 
 ## 10mo / 10th
 
@@ -131,7 +128,6 @@ Now we go to Production Credentials > select an industry and activate production
 De acá obtenemos el Acces Token, recordar hacerlo en la variable de entorno del deploy.
 From here we obtain the Access Token, remember to set this in the environment variable for the deployment.  
 ![mp_config2](./public/readme/7.webp)
-![mp_config3](./public/readme/12.webp)
 
 ```
 MP_ACCESS_TOKEN=APP_USR-1043861622129703-101301-6f99886c5140a0dc316fee6da2e99aca-318253112
@@ -141,8 +137,6 @@ MP_ACCESS_TOKEN=APP_USR-1043861622129703-101301-6f99886c5140a0dc316fee6da2e99aca
 
 Modificamos nuestra variable de enorno en produccion para NEXT_PUBLIC_APP_URL así funcionara nuestro sandbox y preferencia de mercado pago en el deploy.  
 We modify our environment variable in production for NEXT_PUBLIC_APP_URL so that our sandbox and Mercado Pago preferences work in the deploy.
-
-![mp_config3](./public/readme/11.webp)
 
 ¡Listo!, Done!
 
