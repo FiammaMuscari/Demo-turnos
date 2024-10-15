@@ -1,67 +1,108 @@
 "use client";
+
 import React, { useEffect, useTransition, useState } from "react";
+
 import ServicesList from "@/components/ServicesList";
+
 import { DatePickerForm } from "@/components/DatePickerForm";
+
 import { AppointmentSchema } from "@/schemas";
+
 import { useForm } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormControl,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+
+import { Form } from "@/components/ui/form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import * as z from "zod";
-import { useCurrentUser } from "@/hooks/use-current-user";
-import { createAppointment } from "@/actions/appointments";
+
 import { useSession } from "next-auth/react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import TimeList from "@/components/TimeList";
+
 import { useToast } from "@/components/ui/use-toast";
+
 import { useCurrentUserDetails } from "@/hooks/use-current-user-details";
+
 import { Toaster } from "@/components/ui/toaster";
+
 import { getUnavailableTimes } from "@/actions/appointments";
+
 import { payment } from "@/actions/payment";
-import { MercadoPagoConfig, Preference } from "mercadopago";
-import { redirect, useSearchParams } from "next/navigation";
+
+import { createAppointment } from "@/actions/appointments";
+import TimeList from "@/components/TimeList";
+
 interface Service {
   id: string;
+
   name: string;
   price: string;
 }
 
 const ClientPage: React.FC = () => {
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
+
   const [totalPrice, setTotalPrice] = useState<number>(0);
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+
+  const [isPending] = useTransition();
+
   const [error, setError] = useState<string | undefined>();
+
   const [success, setSuccess] = useState<string | undefined>();
+
   const { update } = useSession();
-  const user = useCurrentUser();
+
+  const userDetails = useCurrentUserDetails();
+
   const { toast } = useToast();
+
   const [unavailableTimes, setUnavailableTimes] = useState<string[]>([]);
 
-  const handleServiceSelection = (service: Service) => {
-    setSelectedServices((prev) => [...prev, service]);
-    setTotalPrice((prev) => prev + parseFloat(service.price));
-  };
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
-  const handleDateSelection = (date: string) => {
-    setSelectedDate(date);
-  };
+  useEffect(() => {
+    const total = selectedServices.reduce(
+      (accumulator, service) => accumulator + parseFloat(service.price),
 
-  const handleTimeSelection = (time: string) => {
-    setSelectedTime(time);
+      0
+    );
+
+    setTotalPrice(total);
+  }, [selectedServices]);
+
+  const handleDateSelection = (date: string | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+
+      getUnavailableTimes(date)
+        .then((data) => {
+          if (!data.success) {
+            setError(data.error);
+          }
+        })
+        .catch(() => setError("Algo salió mal"));
+    } else {
+      setSelectedDate(null);
+    }
   };
 
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
+    defaultValues: {
+      userName: userDetails?.name || "",
+      userEmail: userDetails?.email || "",
+      date: "",
+      time: "",
+      services: selectedServices.map((service) => ({
+        name: service.name,
+        price: parseFloat(service.price),
+      })),
+      totalPrice: totalPrice,
+    },
   });
 
   const formattedTotalPrice = totalPrice.toLocaleString("es-AR", {
@@ -70,39 +111,169 @@ const ClientPage: React.FC = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
-    if (!selectedDate || !selectedTime || selectedServices.length === 0) {
+    const updatedValues = {
+      userName: userDetails?.name || "",
+      userEmail: userDetails?.email || "",
+      date: selectedDate || "",
+      time: selectedTime || "",
+      services: selectedServices.map((service) => ({
+        name: service.name,
+        price: parseFloat(service.price),
+      })),
+      totalPrice: totalPrice,
+    };
+
+    // imagino que aca guardas los datos del appointment
+    localStorage.setItem("appointmentData", JSON.stringify(updatedValues));
+
+    if (
+      !updatedValues.date ||
+      !updatedValues.time ||
+      updatedValues.services.length === 0
+    ) {
       toast({
         title: "Error",
+
         description:
           "Por favor, complete todos los campos para agendar el turno",
+
         variant: "destructive",
       });
+
       return;
     }
 
     try {
-      const updatedValues = {
-        ...values,
+      const { redirectUrl } = await payment(totalPrice, {
+        userName: userDetails?.name || "",
+
+        userEmail: userDetails?.email || "",
+
         date: selectedDate || "",
+
         time: selectedTime || "",
         services: selectedServices.map((service) => ({
           name: service.name,
+
           price: parseFloat(service.price),
         })),
-        totalPrice: totalPrice,
-      };
-      await createAppointment(updatedValues);
-      setSuccess("Turno agendado exitosamente");
-      toast({
-        title: "Turno agendado",
-        description: `El día ${selectedDate} con un total de ${formattedTotalPrice}`,
       });
-      redirect("/mis-turnos");
+
+      // Al hacer esto no estas causando un "reload" total de la pagina perdiendo los datos?
+      window.location.href = redirectUrl;
+
+      // imagino que en la linea 126 guardas los datos del appointment para persistirlo luego del reload
+      
     } catch (error) {
-      console.error("Error al agendar el turno:", error);
-      setError("Hubo un error al agendar el turno");
+      setError("Algo salió mal durante el pago");
     }
   };
+
+  const handleServiceSelection = (service: Service) => {
+    const isServiceSelected = selectedServices.some(
+      (s) => s.name === service.name
+    );
+
+    if (isServiceSelected) {
+      setSelectedServices(
+        selectedServices.filter((s) => s.name !== service.name)
+      );
+    } else {
+      setSelectedServices([...selectedServices, service]);
+    }
+  };
+
+  const handleTimeSelection = (time: string) => {
+    setSelectedTime(time);
+  };
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const collectionStatus = queryParams.get("collection_status");
+
+    if (collectionStatus === "approved") {
+      const scheduleAppointment = async () => {
+        // quizás acá podes utilizar esos datos persistidos en vez de los del hook que podría no tener acceso a los datos correctos despues del reload.
+        // const appointmentData = JSON.parse(localStorage.getItem('appointmentData'))
+
+        // Aunque igualmente creo que el notification.ts debería ser el que maneje esto y no el useEffect
+        const updatedValues = {
+          userName: userDetails?.name || "",
+
+          userEmail: userDetails?.email || "",
+
+          date: selectedDate || "",
+
+          time: selectedTime || "",
+
+          services: selectedServices.map((service) => service.name),
+        };
+
+        if (
+          !updatedValues.date ||
+          !updatedValues.time ||
+          updatedValues.services.length === 0
+        ) {
+          setError(
+            "No se puede agendar el turno. Por favor, completa todos los campos."
+          );
+
+          return;
+        }
+        try {
+          const totalPrice = selectedServices.reduce(
+            (acc: number, service: Service) => acc + parseFloat(service.price),
+            0
+          );
+          const servicesWithPrice = selectedServices.map(
+            (service: Service) => ({
+              name: service.name,
+              price: parseFloat(service.price),
+            })
+          );
+          const updatedValuesWithTotalPrice = {
+            ...updatedValues,
+            totalPrice,
+            services: servicesWithPrice,
+          };
+          await createAppointment(updatedValuesWithTotalPrice);
+
+          update();
+
+          setSuccess("Turno agendado exitosamente");
+
+          toast({
+            title: "Turno agendado",
+
+            description: `El día ${selectedDate}`,
+          });
+
+          window.location.href = redirectUrl || "";
+        } catch (error) {
+          setError("Hubo un error al agendar el turno");
+        }
+      };
+
+      scheduleAppointment();
+    }
+  }, [
+    selectedDate,
+
+    selectedServices,
+
+    selectedTime,
+
+    toast,
+
+    update,
+
+    userDetails?.email,
+
+    userDetails?.name,
+
+    redirectUrl,
+  ]);
 
   return (
     <>
@@ -111,20 +282,24 @@ const ClientPage: React.FC = () => {
           <h1 className="mb-3 text-white flex justify-center">
             Hola, ¿Qué deseas hacerte?
           </h1>
+
           <ServicesList
             handleServiceSelection={handleServiceSelection}
             selectedServices={selectedServices}
           />
+
           <div className="max-w-80 bg-white rounded-sm p-4 m-3">
             <h2>A pagar:</h2>
+
             {selectedServices.length > 0 ? (
               selectedServices.map((service) => (
                 <ul key={service.id} className="flex justify-end">
                   <li>{service.name}</li>
+
                   <li>
-                    ..........{" "}
                     {parseFloat(service.price).toLocaleString("es-AR", {
                       style: "currency",
+
                       currency: "ARS",
                     })}
                   </li>
@@ -133,15 +308,17 @@ const ClientPage: React.FC = () => {
             ) : (
               <div>No hay servicios seleccionados</div>
             )}
+
             <div className="text-blue-400">Total: {formattedTotalPrice} </div>
           </div>
-          <DatePickerForm
-            onSelectDate={(date) => handleDateSelection(date || "")}
-          />
+
+          <DatePickerForm onSelectDate={handleDateSelection} />
+
           <TimeList
-            onSelectTime={(time) => handleTimeSelection(time || "")}
+            onSelectTime={handleTimeSelection}
             unavailableTimes={unavailableTimes}
           />
+
           <Button
             disabled={isPending || success !== undefined}
             type="submit"
@@ -151,6 +328,7 @@ const ClientPage: React.FC = () => {
           </Button>
         </form>
       </Form>
+
       <Toaster />
     </>
   );
