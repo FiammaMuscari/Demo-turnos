@@ -1,5 +1,4 @@
 "use server";
-
 import { MercadoPagoConfig, Preference } from "mercadopago";
 
 const client = new MercadoPagoConfig({
@@ -23,13 +22,6 @@ export async function payment(
     unit_price: service.price,
   }));
 
-  //  items.push({
-  //   id: "total",
-  //   title: "Total de servicios",
-  //   quantity: 1,
-  //   unit_price: totalPrice,
-  // });
-
   const preference = await new Preference(client).create({
     body: {
       items,
@@ -41,15 +33,7 @@ export async function payment(
     },
   });
 
-  console.log("esto FIAMMA:", preference.notification_url);
   return {
     redirectUrl: preference.sandbox_init_point!,
-    appointmentData: {
-      userName: appointmentData.userName,
-      userEmail: appointmentData.userEmail,
-      date: appointmentData.date,
-      time: appointmentData.time,
-      services: appointmentData.services.map((service) => service.name), // Asegúrate de que esto sea un array de nombres
-    },
   };
 }

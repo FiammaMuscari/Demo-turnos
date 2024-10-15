@@ -80,6 +80,7 @@ CREATE TABLE "Appointment" (
     "time" TEXT NOT NULL,
     "isAvailable" BOOLEAN NOT NULL DEFAULT true,
     "services" TEXT[],
+    "totalPrice" TEXT,
 
     CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
 );

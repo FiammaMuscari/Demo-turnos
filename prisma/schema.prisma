@@ -92,6 +92,7 @@ model Appointment {
   time         String
   isAvailable  Boolean   @default(true)
   services     String[] 
+  totalPrice   String?
 }
 
 model Service {

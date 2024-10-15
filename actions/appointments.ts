@@ -23,7 +23,8 @@ export const createAppointment = async (
         date: values.date,
         time: values.time,
         isAvailable: false,
-        services: values.services,
+        services: values.services.map((service) => service.name),
+        totalPrice: values.totalPrice.toString(),
       },
     });
 

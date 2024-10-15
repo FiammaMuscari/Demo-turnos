@@ -1,39 +1,42 @@
 "use client";
+
 import React, { useEffect, useTransition, useState } from "react";
+
 import ServicesList from "@/components/ServicesList";
+
 import { DatePickerForm } from "@/components/DatePickerForm";
+
 import { AppointmentSchema } from "@/schemas";
+
 import { useForm } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormControl,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+
+import { Form } from "@/components/ui/form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import * as z from "zod";
-import { useCurrentUser } from "@/hooks/use-current-user";
-import { createAppointment } from "@/actions/appointments";
+
 import { useSession } from "next-auth/react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import TimeList from "@/components/TimeList";
+
 import { useToast } from "@/components/ui/use-toast";
+
 import { useCurrentUserDetails } from "@/hooks/use-current-user-details";
+
 import { Toaster } from "@/components/ui/toaster";
+
 import { getUnavailableTimes } from "@/actions/appointments";
+
 import { payment } from "@/actions/payment";
-import { MercadoPagoConfig, Preference } from "mercadopago";
-import { redirect, useSearchParams } from "next/navigation";
+
+import { createAppointment } from "@/actions/appointments";
+import TimeList from "@/components/TimeList";
 
 interface Service {
   id: string;
 
   name: string;
-
   price: string;
 }
 
@@ -56,7 +59,10 @@ const ClientPage: React.FC = () => {
   const userDetails = useCurrentUserDetails();
 
   const { toast } = useToast();
+
   const [unavailableTimes, setUnavailableTimes] = useState<string[]>([]);
+
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const total = selectedServices.reduce(
@@ -74,13 +80,10 @@ const ClientPage: React.FC = () => {
 
       getUnavailableTimes(date)
         .then((data) => {
-          if (data.success) {
-            setUnavailableTimes(data.data);
-          } else {
+          if (!data.success) {
             setError(data.error);
           }
         })
-
         .catch(() => setError("Algo salió mal"));
     } else {
       setSelectedDate(null);
@@ -89,43 +92,38 @@ const ClientPage: React.FC = () => {
 
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
-
     defaultValues: {
       userName: userDetails?.name || "",
-
       userEmail: userDetails?.email || "",
-
       date: "",
-
       time: "",
-
-      services: selectedServices.map((service) => service.name),
-    },
-  });
-
-  const client = new MercadoPagoConfig({
-    accessToken: process.env.MP_ACCESS_TOKEN!,
-  });
-
-  const formattedTotalPrice = totalPrice.toLocaleString("es-AR", {
-    style: "currency",
-
-    currency: "ARS",
-  });
-
-  const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
-    console.log("Datos del formulario antes de enviar:", values);
-    const updatedValues = {
-      ...values,
-      date: selectedDate,
-      time: selectedTime,
       services: selectedServices.map((service) => ({
         name: service.name,
         price: parseFloat(service.price),
       })),
+      totalPrice: totalPrice,
+    },
+  });
+
+  const formattedTotalPrice = totalPrice.toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
+  });
+
+  const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
+    const updatedValues = {
+      userName: userDetails?.name || "",
+      userEmail: userDetails?.email || "",
+      date: selectedDate || "",
+      time: selectedTime || "",
+      services: selectedServices.map((service) => ({
+        name: service.name,
+        price: parseFloat(service.price),
+      })),
+      totalPrice: totalPrice,
     };
-    localStorage.setItem("updatedValues", JSON.stringify(updatedValues))
-    console.log("Valores actualizados para enviar:", updatedValues);
+
+    localStorage.setItem("appointmentData", JSON.stringify(updatedValues));
 
     if (
       !updatedValues.date ||
@@ -134,100 +132,116 @@ const ClientPage: React.FC = () => {
     ) {
       toast({
         title: "Error",
+
         description:
           "Por favor, complete todos los campos para agendar el turno",
+
         variant: "destructive",
       });
+
       return;
     }
 
     try {
       const { redirectUrl } = await payment(totalPrice, {
         userName: userDetails?.name || "",
+
         userEmail: userDetails?.email || "",
+
         date: selectedDate || "",
+
         time: selectedTime || "",
         services: selectedServices.map((service) => ({
           name: service.name,
+
           price: parseFloat(service.price),
         })),
       });
 
-      console.log("Redirigiendo a:", redirectUrl);
       window.location.href = redirectUrl;
     } catch (error) {
-      console.error("Error durante el pago:", error);
       setError("Algo salió mal durante el pago");
     }
   };
 
   const handleServiceSelection = (service: Service) => {
-    console.log("Servicio seleccionado:", service);
     const isServiceSelected = selectedServices.some(
       (s) => s.name === service.name
     );
+
     if (isServiceSelected) {
-      const updatedServices = selectedServices.filter(
-        (s) => s.name !== service.name
+      setSelectedServices(
+        selectedServices.filter((s) => s.name !== service.name)
       );
-      console.log(
-        "Servicios actualizados después de la deselección:",
-        updatedServices
-      );
-      setSelectedServices(updatedServices);
     } else {
       setSelectedServices([...selectedServices, service]);
-      console.log("Servicios actualizados después de la selección:", [
-        ...selectedServices,
-        service,
-      ]);
     }
   };
 
   const handleTimeSelection = (time: string) => {
-    console.log("Hora seleccionada:", time);
     setSelectedTime(time);
   };
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
+
     const collectionStatus = queryParams.get("collection_status");
-    console.log("Estado de la colección:", collectionStatus);
 
     if (collectionStatus === "approved") {
       const scheduleAppointment = async () => {
         const updatedValues = {
           userName: userDetails?.name || "",
+
           userEmail: userDetails?.email || "",
+
           date: selectedDate || "",
+
           time: selectedTime || "",
+
           services: selectedServices.map((service) => service.name),
         };
-
-        console.log("Agendando cita con los siguientes datos:", updatedValues);
 
         if (
           !updatedValues.date ||
           !updatedValues.time ||
           updatedValues.services.length === 0
         ) {
-          console.error("Error: Datos incompletos para crear la cita.");
           setError(
             "No se puede agendar el turno. Por favor, completa todos los campos."
           );
+
           return;
         }
-
         try {
-          await createAppointment(updatedValues);
+          const totalPrice = selectedServices.reduce(
+            (acc: number, service: Service) => acc + parseFloat(service.price),
+            0
+          );
+          const servicesWithPrice = selectedServices.map(
+            (service: Service) => ({
+              name: service.name,
+              price: parseFloat(service.price),
+            })
+          );
+          const updatedValuesWithTotalPrice = {
+            ...updatedValues,
+            totalPrice,
+            services: servicesWithPrice,
+          };
+          await createAppointment(updatedValuesWithTotalPrice);
+
           update();
+
           setSuccess("Turno agendado exitosamente");
+
           toast({
             title: "Turno agendado",
+
             description: `El día ${selectedDate}`,
           });
+
+          window.location.href = redirectUrl || "";
         } catch (error) {
-          console.error("Error al agendar el turno:", error);
           setError("Hubo un error al agendar el turno");
         }
       };
@@ -236,13 +250,22 @@ const ClientPage: React.FC = () => {
     }
   }, [
     selectedDate,
+
     selectedServices,
+
     selectedTime,
+
     toast,
+
     update,
+
     userDetails?.email,
+
     userDetails?.name,
+
+    redirectUrl,
   ]);
+
   return (
     <>
       <Form {...form}>

@@ -80,11 +80,17 @@ export const ServiceSchema = z.object({
 });
 
 export const AppointmentSchema = z.object({
-  userName: z.string(),
-  userEmail: z.string(),
-  date: z.string(),
-  time: z.string(),
-  services: z.array(z.string()),
+  userName: z.string().min(1, "El nombre es requerido"),
+  userEmail: z.string().email("Email inválido"),
+  date: z.string().min(1, "La fecha es requerida"),
+  time: z.string().min(1, "La hora es requerida"),
+  services: z.array(
+    z.object({
+      name: z.string(),
+      price: z.number(),
+    })
+  ),
+  totalPrice: z.number().min(0, "El precio total es requerido"), // Nuevo campo
 });
 
 export const AppointmentServiceSchema = z.object({
