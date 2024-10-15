@@ -90,7 +90,35 @@ const ClientPage: React.FC = () => {
     style: "currency",
     currency: "ARS",
   });
+  // mercado pago commented section
+  // const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
+  //   if (!selectedDate || !selectedTime || selectedServices.length === 0) {
+  //     toast({
+  //       title: "Error",
+  //       description:
+  //         "Por favor, complete todos los campos para agendar el turno",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
 
+  //   try {
+  //     const preferenceUrl = await payment(totalPrice);
+  //     window.location.href = preferenceUrl;
+
+  //     const checkPaymentStatus = async () => {
+  //       try {
+  //       } catch (error) {
+  //         console.error("Error al verificar el estado del pago:", error);
+  //         setError("Something went wrong while verifying payment status");
+  //       }
+  //     };
+  //     checkPaymentStatus();
+  //   } catch (error) {
+  //     console.error("Error durante el pago:", error);
+  //     setError("Something went wrong during payment");
+  //   }
+  // };
   const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
     if (!selectedDate || !selectedTime || selectedServices.length === 0) {
       toast({
@@ -103,20 +131,26 @@ const ClientPage: React.FC = () => {
     }
 
     try {
-      const preferenceUrl = await payment(totalPrice);
-      window.location.href = preferenceUrl;
-
-      const checkPaymentStatus = async () => {
-        try {
-        } catch (error) {
-          console.error("Error al verificar el estado del pago:", error);
-          setError("Something went wrong while verifying payment status");
-        }
+      const updatedValues = {
+        ...values,
+        date: selectedDate,
+        time: selectedTime,
+        services: selectedServices.map((service) => service.name),
       };
-      checkPaymentStatus();
+      const result = await createAppointment(updatedValues);
+      if (result.success) {
+        update();
+        setSuccess("Turno agendado exitosamente");
+        toast({
+          title: "Turno agendado",
+          description: `El día ${selectedDate} a las ${selectedTime}`,
+        });
+      } else {
+        setError(result.error || "Hubo un error al agendar el turno");
+      }
     } catch (error) {
-      console.error("Error durante el pago:", error);
-      setError("Something went wrong during payment");
+      console.error("Error al agendar el turno:", error);
+      setError("Hubo un error al agendar el turno");
     }
   };
 
