@@ -1,108 +1,67 @@
 "use client";
-
 import React, { useEffect, useTransition, useState } from "react";
-
 import ServicesList from "@/components/ServicesList";
-
 import { DatePickerForm } from "@/components/DatePickerForm";
-
 import { AppointmentSchema } from "@/schemas";
-
 import { useForm } from "react-hook-form";
-
 import { Button } from "@/components/ui/button";
-
-import { Form } from "@/components/ui/form";
-
+import {
+  Form,
+  FormField,
+  FormControl,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import * as z from "zod";
-
-import { useSession } from "next-auth/react";
-
-import { useToast } from "@/components/ui/use-toast";
-
-import { useCurrentUserDetails } from "@/hooks/use-current-user-details";
-
-import { Toaster } from "@/components/ui/toaster";
-
-import { getUnavailableTimes } from "@/actions/appointments";
-
-import { payment } from "@/actions/payment";
-
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { createAppointment } from "@/actions/appointments";
+import { useSession } from "next-auth/react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import TimeList from "@/components/TimeList";
-
+import { useToast } from "@/components/ui/use-toast";
+import { useCurrentUserDetails } from "@/hooks/use-current-user-details";
+import { Toaster } from "@/components/ui/toaster";
+import { getUnavailableTimes } from "@/actions/appointments";
+import { payment } from "@/actions/payment";
+import { MercadoPagoConfig, Preference } from "mercadopago";
+import { redirect, useSearchParams } from "next/navigation";
 interface Service {
   id: string;
-
   name: string;
   price: string;
 }
 
 const ClientPage: React.FC = () => {
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
-
   const [totalPrice, setTotalPrice] = useState<number>(0);
-
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-
-  const [isPending] = useTransition();
-
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>();
-
   const [success, setSuccess] = useState<string | undefined>();
-
   const { update } = useSession();
-
-  const userDetails = useCurrentUserDetails();
-
+  const user = useCurrentUser();
   const { toast } = useToast();
-
   const [unavailableTimes, setUnavailableTimes] = useState<string[]>([]);
 
-  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const handleServiceSelection = (service: Service) => {
+    setSelectedServices((prev) => [...prev, service]);
+    setTotalPrice((prev) => prev + parseFloat(service.price));
+  };
 
-  useEffect(() => {
-    const total = selectedServices.reduce(
-      (accumulator, service) => accumulator + parseFloat(service.price),
+  const handleDateSelection = (date: string) => {
+    setSelectedDate(date);
+  };
 
-      0
-    );
-
-    setTotalPrice(total);
-  }, [selectedServices]);
-
-  const handleDateSelection = (date: string | undefined) => {
-    if (date) {
-      setSelectedDate(date);
-
-      getUnavailableTimes(date)
-        .then((data) => {
-          if (!data.success) {
-            setError(data.error);
-          }
-        })
-        .catch(() => setError("Algo salió mal"));
-    } else {
-      setSelectedDate(null);
-    }
+  const handleTimeSelection = (time: string) => {
+    setSelectedTime(time);
   };
 
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
-    defaultValues: {
-      userName: userDetails?.name || "",
-      userEmail: userDetails?.email || "",
-      date: "",
-      time: "",
-      services: selectedServices.map((service) => ({
-        name: service.name,
-        price: parseFloat(service.price),
-      })),
-      totalPrice: totalPrice,
-    },
   });
 
   const formattedTotalPrice = totalPrice.toLocaleString("es-AR", {
@@ -111,160 +70,39 @@ const ClientPage: React.FC = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
-    const updatedValues = {
-      userName: userDetails?.name || "",
-      userEmail: userDetails?.email || "",
-      date: selectedDate || "",
-      time: selectedTime || "",
-      services: selectedServices.map((service) => ({
-        name: service.name,
-        price: parseFloat(service.price),
-      })),
-      totalPrice: totalPrice,
-    };
-
-    localStorage.setItem("appointmentData", JSON.stringify(updatedValues));
-
-    if (
-      !updatedValues.date ||
-      !updatedValues.time ||
-      updatedValues.services.length === 0
-    ) {
+    if (!selectedDate || !selectedTime || selectedServices.length === 0) {
       toast({
         title: "Error",
-
         description:
           "Por favor, complete todos los campos para agendar el turno",
-
         variant: "destructive",
       });
-
       return;
     }
 
     try {
-      const { redirectUrl } = await payment(totalPrice, {
-        userName: userDetails?.name || "",
-
-        userEmail: userDetails?.email || "",
-
+      const updatedValues = {
+        ...values,
         date: selectedDate || "",
-
         time: selectedTime || "",
         services: selectedServices.map((service) => ({
           name: service.name,
-
           price: parseFloat(service.price),
         })),
-      });
-
-      window.location.href = redirectUrl;
-    } catch (error) {
-      setError("Algo salió mal durante el pago");
-    }
-  };
-
-  const handleServiceSelection = (service: Service) => {
-    const isServiceSelected = selectedServices.some(
-      (s) => s.name === service.name
-    );
-
-    if (isServiceSelected) {
-      setSelectedServices(
-        selectedServices.filter((s) => s.name !== service.name)
-      );
-    } else {
-      setSelectedServices([...selectedServices, service]);
-    }
-  };
-
-  const handleTimeSelection = (time: string) => {
-    setSelectedTime(time);
-  };
-
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-
-    const collectionStatus = queryParams.get("collection_status");
-
-    if (collectionStatus === "approved") {
-      const scheduleAppointment = async () => {
-        const updatedValues = {
-          userName: userDetails?.name || "",
-
-          userEmail: userDetails?.email || "",
-
-          date: selectedDate || "",
-
-          time: selectedTime || "",
-
-          services: selectedServices.map((service) => service.name),
-        };
-
-        if (
-          !updatedValues.date ||
-          !updatedValues.time ||
-          updatedValues.services.length === 0
-        ) {
-          setError(
-            "No se puede agendar el turno. Por favor, completa todos los campos."
-          );
-
-          return;
-        }
-        try {
-          const totalPrice = selectedServices.reduce(
-            (acc: number, service: Service) => acc + parseFloat(service.price),
-            0
-          );
-          const servicesWithPrice = selectedServices.map(
-            (service: Service) => ({
-              name: service.name,
-              price: parseFloat(service.price),
-            })
-          );
-          const updatedValuesWithTotalPrice = {
-            ...updatedValues,
-            totalPrice,
-            services: servicesWithPrice,
-          };
-          await createAppointment(updatedValuesWithTotalPrice);
-
-          update();
-
-          setSuccess("Turno agendado exitosamente");
-
-          toast({
-            title: "Turno agendado",
-
-            description: `El día ${selectedDate}`,
-          });
-
-          window.location.href = redirectUrl || "";
-        } catch (error) {
-          setError("Hubo un error al agendar el turno");
-        }
+        totalPrice: totalPrice,
       };
-
-      scheduleAppointment();
+      await createAppointment(updatedValues);
+      setSuccess("Turno agendado exitosamente");
+      toast({
+        title: "Turno agendado",
+        description: `El día ${selectedDate} con un total de ${formattedTotalPrice}`,
+      });
+      redirect("/mis-turnos");
+    } catch (error) {
+      console.error("Error al agendar el turno:", error);
+      setError("Hubo un error al agendar el turno");
     }
-  }, [
-    selectedDate,
-
-    selectedServices,
-
-    selectedTime,
-
-    toast,
-
-    update,
-
-    userDetails?.email,
-
-    userDetails?.name,
-
-    redirectUrl,
-  ]);
+  };
 
   return (
     <>
@@ -273,24 +111,20 @@ const ClientPage: React.FC = () => {
           <h1 className="mb-3 text-white flex justify-center">
             Hola, ¿Qué deseas hacerte?
           </h1>
-
           <ServicesList
             handleServiceSelection={handleServiceSelection}
             selectedServices={selectedServices}
           />
-
           <div className="max-w-80 bg-white rounded-sm p-4 m-3">
             <h2>A pagar:</h2>
-
             {selectedServices.length > 0 ? (
               selectedServices.map((service) => (
                 <ul key={service.id} className="flex justify-end">
                   <li>{service.name}</li>
-
                   <li>
+                    ..........{" "}
                     {parseFloat(service.price).toLocaleString("es-AR", {
                       style: "currency",
-
                       currency: "ARS",
                     })}
                   </li>
@@ -299,17 +133,15 @@ const ClientPage: React.FC = () => {
             ) : (
               <div>No hay servicios seleccionados</div>
             )}
-
             <div className="text-blue-400">Total: {formattedTotalPrice} </div>
           </div>
-
-          <DatePickerForm onSelectDate={handleDateSelection} />
-
+          <DatePickerForm
+            onSelectDate={(date) => handleDateSelection(date || "")}
+          />
           <TimeList
-            onSelectTime={handleTimeSelection}
+            onSelectTime={(time) => handleTimeSelection(time || "")}
             unavailableTimes={unavailableTimes}
           />
-
           <Button
             disabled={isPending || success !== undefined}
             type="submit"
@@ -319,7 +151,6 @@ const ClientPage: React.FC = () => {
           </Button>
         </form>
       </Form>
-
       <Toaster />
     </>
   );
