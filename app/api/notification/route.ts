@@ -1,12 +1,28 @@
-import { NextResponse } from "next/server";
+"use server";
 
-async function handler(request: Request) {
-  const rawBody = await request.text();
-  const response = JSON.parse(rawBody);
-  const objId = response && response["data"]["id"];
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
-  console.log("hola:", objId);
-  console.log("response::", response);
-  return NextResponse.json({}, { status: 200 });
+export async function notification(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    if (body.type === "payment") {
+      const { id, status } = body.data;
+
+      const appointment = await db.appointment.findUnique({ where: { id } });
+
+      if (appointment) {
+        await db.appointment.update({
+          where: { id },
+          data: { isAvailable: status === "approved" },
+        });
+      }
+    }
+
+    return new NextResponse(null, { status: 200 });
+  } catch (error) {
+    console.error("Error processing notification:", error);
+    return new NextResponse(null, { status: 403 });
+  }
 }
-export const POST = handler;

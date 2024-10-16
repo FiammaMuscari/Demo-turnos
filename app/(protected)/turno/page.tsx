@@ -26,8 +26,6 @@ import { useCurrentUserDetails } from "@/hooks/use-current-user-details";
 import { Toaster } from "@/components/ui/toaster";
 import { getUnavailableTimes } from "@/actions/appointments";
 import { payment } from "@/actions/payment";
-import { MercadoPagoConfig, Preference } from "mercadopago";
-import { redirect, useSearchParams } from "next/navigation";
 interface Service {
   id: string;
   name: string;
@@ -71,6 +69,7 @@ const ClientPage: React.FC = () => {
     }
   };
   const userDetails = useCurrentUserDetails();
+  
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
     defaultValues: {
@@ -82,49 +81,16 @@ const ClientPage: React.FC = () => {
     },
   });
 
-  const client = new MercadoPagoConfig({
-    accessToken: process.env.MP_ACCESS_TOKEN!,
-  });
-
   const formattedTotalPrice = totalPrice.toLocaleString("es-AR", {
     style: "currency",
     currency: "ARS",
   });
-  // mercado pago commented section
-  // const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
-  //   if (!selectedDate || !selectedTime || selectedServices.length === 0) {
-  //     toast({
-  //       title: "Error",
-  //       description:
-  //         "Por favor, complete todos los campos para agendar el turno",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
 
-  //   try {
-  //     const preferenceUrl = await payment(totalPrice);
-  //     window.location.href = preferenceUrl;
-
-  //     const checkPaymentStatus = async () => {
-  //       try {
-  //       } catch (error) {
-  //         console.error("Error al verificar el estado del pago:", error);
-  //         setError("Something went wrong while verifying payment status");
-  //       }
-  //     };
-  //     checkPaymentStatus();
-  //   } catch (error) {
-  //     console.error("Error durante el pago:", error);
-  //     setError("Something went wrong during payment");
-  //   }
-  // };
   const onSubmit = async (values: z.infer<typeof AppointmentSchema>) => {
     if (!selectedDate || !selectedTime || selectedServices.length === 0) {
       toast({
         title: "Error",
-        description:
-          "Por favor, complete todos los campos para agendar el turno",
+        description: "Por favor, complete todos los campos para agendar el turno",
         variant: "destructive",
       });
       return;
@@ -137,22 +103,16 @@ const ClientPage: React.FC = () => {
         time: selectedTime,
         services: selectedServices.map((service) => service.name),
       };
-      const result = await createAppointment(updatedValues);
-      if (result.success) {
-        update();
-        setSuccess("Turno agendado exitosamente");
-        toast({
-          title: "Turno agendado",
-          description: `El día ${selectedDate} a las ${selectedTime}`,
-        });
-      } else {
-        setError(result.error || "Hubo un error al agendar el turno");
-      }
+
+      const { paymentUrl } = await payment(updatedValues, totalPrice, { text: "Turno agendado" });
+      window.location.href = paymentUrl;
+      
     } catch (error) {
-      console.error("Error al agendar el turno:", error);
-      setError("Hubo un error al agendar el turno");
+      console.error("Error durante el pago:", error);
+      toast({ title: "Error", description: "Hubo un error al iniciar el pago", variant: "destructive" });
     }
   };
+   
 
   const handleServiceSelection = (service: Service) => {
     const isServiceSelected = selectedServices.some(
@@ -172,47 +132,7 @@ const ClientPage: React.FC = () => {
     setSelectedTime(time);
   };
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const collectionStatus = queryParams.get("collection_status");
 
-    if (collectionStatus === "approved") {
-      console.log("El estado de la colección es 'approved'");
-
-      const scheduleAppointment = async (
-        values: z.infer<typeof AppointmentSchema>,
-        selectedDate: string | null,
-        selectedTime: string | null,
-        selectedServices: Service[]
-      ) => {
-        try {
-          const updatedValues = {
-            ...values,
-            date: selectedDate || "",
-            time: selectedTime || "",
-            services: selectedServices.map((service) => service.name),
-          };
-          await createAppointment(updatedValues);
-          update();
-          setSuccess("Turno agendado exitosamente");
-          toast({
-            title: "Turno agendado",
-            description: `El día ${selectedDate}`,
-          });
-        } catch (error) {
-          console.error("Error al agendar el turno:", error);
-          setError("Hubo un error al agendar el turno");
-        }
-      };
-
-      scheduleAppointment(
-        form.getValues(),
-        selectedDate,
-        selectedTime,
-        selectedServices
-      );
-    }
-  }, [form, selectedDate, selectedServices, selectedTime, toast, update]);
 
   return (
     <>
