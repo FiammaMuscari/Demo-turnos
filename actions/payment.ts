@@ -3,15 +3,16 @@
 import cuid from "cuid";
 import * as z from "zod";
 import { AppointmentSchema } from "@/schemas";
-import { db } from "@/lib/db";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN!,
 });
 
-export const payment = async (
-values: z.infer<typeof AppointmentSchema>, totalPrice: number, p0: { text: string; }): Promise<{ appointment: any; paymentUrl: string }> => {
+export const createPaymentPreference = async (
+  values: z.infer<typeof AppointmentSchema>,
+  totalPrice: number
+): Promise<{ paymentUrl: string }> => {
   try {
     const validatedFields = AppointmentSchema.safeParse(values);
 
@@ -19,17 +20,7 @@ values: z.infer<typeof AppointmentSchema>, totalPrice: number, p0: { text: strin
       throw new Error("Invalid fields!");
     }
 
-    const newAppointment = await db.appointment.create({
-      data: {
-        id: cuid(),
-        userName: values.userName,
-        userEmail: values.userEmail,
-        date: values.date,
-        time: values.time,
-        isAvailable: false,
-        services: values.services,
-      },
-    });
+    const appointmentId = cuid();
 
     const preference = await new Preference(client).create({
       body: {
@@ -47,15 +38,22 @@ values: z.infer<typeof AppointmentSchema>, totalPrice: number, p0: { text: strin
           failure: `${process.env.NEXT_PUBLIC_APP_URL}/error`,
         },
         auto_return: "approved",
+        metadata: {
+          appointmentId,
+          userName: values.userName,
+          userEmail: values.userEmail,
+          date: values.date,
+          time: values.time,
+          services: values.services,
+        },
       },
     });
 
     return {
-      appointment: newAppointment,
-      paymentUrl: preference.init_point!,  
+      paymentUrl: preference.init_point!,
     };
   } catch (error) {
-    console.error("Error creating appointment or payment preference:", error);
-    throw new Error("Could not create appointment and payment preference");
+    console.error("Error creating payment preference:", error);
+    throw new Error("Could not create payment preference");
   }
 };

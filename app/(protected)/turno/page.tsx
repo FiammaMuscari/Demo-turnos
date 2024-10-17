@@ -25,7 +25,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { useCurrentUserDetails } from "@/hooks/use-current-user-details";
 import { Toaster } from "@/components/ui/toaster";
 import { getUnavailableTimes } from "@/actions/appointments";
-import { payment } from "@/actions/payment";
+import { createPaymentPreference } from "@/actions/payment";
+
+import { MercadoPagoConfig, Preference } from "mercadopago";
+import { redirect, useSearchParams } from "next/navigation";
 interface Service {
   id: string;
   name: string;
@@ -69,7 +72,6 @@ const ClientPage: React.FC = () => {
     }
   };
   const userDetails = useCurrentUserDetails();
-  
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
     defaultValues: {
@@ -90,29 +92,39 @@ const ClientPage: React.FC = () => {
     if (!selectedDate || !selectedTime || selectedServices.length === 0) {
       toast({
         title: "Error",
-        description: "Por favor, complete todos los campos para agendar el turno",
+        description:
+          "Por favor, complete todos los campos para agendar el turno",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const updatedValues = {
-        ...values,
-        date: selectedDate,
-        time: selectedTime,
-        services: selectedServices.map((service) => service.name),
-      };
+      if (selectedDate && selectedTime) {
+        const updatedValues = {
+          ...values,
+          date: selectedDate,
+          time: selectedTime,
+          services: selectedServices.map((service) => service.name),
+        };
 
-      const { paymentUrl } = await payment(updatedValues, totalPrice, { text: "Turno agendado" });
-      window.location.href = paymentUrl;
-      
+        const { paymentUrl } = await createPaymentPreference(
+          updatedValues,
+          totalPrice
+        );
+        window.location.href = paymentUrl;
+      } else {
+        throw new Error("Date or time is null");
+      }
     } catch (error) {
       console.error("Error durante el pago:", error);
-      toast({ title: "Error", description: "Hubo un error al iniciar el pago", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Hubo un error al iniciar el pago",
+        variant: "destructive",
+      });
     }
   };
-   
 
   const handleServiceSelection = (service: Service) => {
     const isServiceSelected = selectedServices.some(
@@ -131,8 +143,6 @@ const ClientPage: React.FC = () => {
   const handleTimeSelection = (time: string) => {
     setSelectedTime(time);
   };
-
-
 
   return (
     <>

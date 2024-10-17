@@ -1,6 +1,5 @@
 "use server";
 
-import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Payment } from "mercadopago";
 import { MercadoPagoConfig } from "mercadopago";
@@ -9,37 +8,26 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN!,
 });
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+export async function POST(req: Request) {
+  const body: { data: { id: string } } = await req.json();
 
-    if (body.type === "payment") {
-      const { id } = body.data;
+  const payment = await new Payment(client).get({ id: body.data.id });
 
-      // Obtener el pago de Mercado Pago
-      const payment = await new Payment(client).get({ id });
+  if (payment.status === "approved") {
+    const appointmentId = payment.metadata.appointmentId;
 
-      // Verificar si el estado del pago es "approved"
-      if (payment.status === "approved") {
-        const appointmentId = payment.metadata.appointmentId;
-
-        const appointment = await db.appointment.findUnique({ where: { id: appointmentId } });
-
-        if (appointment) {
-          await db.appointment.update({
-            where: { id: appointmentId },
-            data: { isAvailable: true },
-          });
-        }
-      } else {
-        // Aquí podrías manejar otros estados si es necesario
-        console.log(`Payment not approved: ${payment.status}`);
-      }
-    }
-
-    return new NextResponse(null, { status: 200 });
-  } catch (error) {
-    console.error("Error processing notification:", error);
-    return new NextResponse(null, { status: 403 });
+    await db.appointment.create({
+      data: {
+        id: appointmentId,
+        userName: payment.metadata.userName,
+        userEmail: payment.metadata.userEmail,
+        date: payment.metadata.date,
+        time: payment.metadata.time,
+        isAvailable: true,
+        services: payment.metadata.services,
+      },
+    });
   }
+
+  return new Response(null, { status: 200 });
 }
