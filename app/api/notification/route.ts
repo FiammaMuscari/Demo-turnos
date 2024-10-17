@@ -1,12 +1,26 @@
-export async function POST(req: Request) {
-  try {
-    const notification = await req.json();
-    console.log("Webhook received:", notification);
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
-    return new Response("Notification received", { status: 200 });
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    if (body.type === "payment") {
+      const { id, status } = body.data;
+
+      const appointment = await db.appointment.findUnique({ where: { id } });
+
+      if (appointment) {
+        await db.appointment.update({
+          where: { id },
+          data: { isAvailable: status === "approved" },
+        });
+      }
+    }
+
+    return new NextResponse(null, { status: 200 });
   } catch (error) {
     console.error("Error processing notification:", error);
-
-    return new Response("Error processing notification", { status: 500 });
+    return new NextResponse(null, { status: 403 });
   }
 }
