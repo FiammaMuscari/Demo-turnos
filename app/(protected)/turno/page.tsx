@@ -25,8 +25,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useCurrentUserDetails } from "@/hooks/use-current-user-details";
 import { Toaster } from "@/components/ui/toaster";
 import { getUnavailableTimes } from "@/actions/appointments";
-import { createPaymentPreference } from "@/actions/payment";
-
+import { payment } from "@/actions/payment";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 import { redirect, useSearchParams } from "next/navigation";
 interface Service {
@@ -100,22 +99,17 @@ const ClientPage: React.FC = () => {
     }
 
     try {
-      if (selectedDate && selectedTime) {
-        const updatedValues = {
-          ...values,
-          date: selectedDate,
-          time: selectedTime,
-          services: selectedServices.map((service) => service.name),
-        };
+      const updatedValues = {
+        ...values,
+        date: selectedDate,
+        time: selectedTime,
+        services: selectedServices.map((service) => service.name),
+      };
 
-        const { paymentUrl } = await createPaymentPreference(
-          updatedValues,
-          totalPrice
-        );
-        window.location.href = paymentUrl;
-      } else {
-        throw new Error("Date or time is null");
-      }
+      const { paymentUrl } = await payment(updatedValues, totalPrice, {
+        text: "Turno agendado",
+      });
+      window.location.href = paymentUrl;
     } catch (error) {
       console.error("Error durante el pago:", error);
       toast({
