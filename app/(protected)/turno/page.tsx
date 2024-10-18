@@ -81,7 +81,10 @@ const ClientPage: React.FC = () => {
       services: selectedServices.map((service) => service.name),
     },
   });
-
+  // Imprimir los valores actuales del formulario
+  useEffect(() => {
+    console.log("Valores actuales del formulario:", form.getValues());
+  }, [form, selectedServices]);
   const formattedTotalPrice = totalPrice.toLocaleString("es-AR", {
     style: "currency",
     currency: "ARS",
@@ -138,6 +141,12 @@ const ClientPage: React.FC = () => {
     } else {
       setSelectedServices([...selectedServices, service]);
     }
+
+    // Actualizar los servicios en el formulario
+    form.setValue("services", [
+      ...selectedServices.map((s) => s.name),
+      service.name,
+    ]);
   };
   const handleTimeSelection = (time: string) => {
     setSelectedTime(time);

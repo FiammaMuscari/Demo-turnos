@@ -40,6 +40,13 @@ export const payment = async (
           failure: `${process.env.NEXT_PUBLIC_APP_URL}/error`,
         },
         auto_return: "approved",
+        metadata: {
+          userName: values.userName,
+          userEmail: values.userEmail,
+          date: values.date,
+          time: values.time,
+          services: values.services,
+        },
       },
     });
     console.log("Preferencia de pago creada:", preference);
