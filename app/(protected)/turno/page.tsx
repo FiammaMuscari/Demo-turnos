@@ -104,11 +104,10 @@ const ClientPage: React.FC = () => {
         date: selectedDate,
         time: selectedTime,
         services: selectedServices.map((service) => service.name),
+        totalPrice: totalPrice,
       };
 
-      const { paymentUrl } = await payment(updatedValues, totalPrice, {
-        text: "Turno agendado",
-      });
+      const { paymentUrl } = await payment(updatedValues, totalPrice, selectedServices);
       window.location.href = paymentUrl;
     } catch (error) {
       console.error("Error durante el pago:", error);

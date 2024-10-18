@@ -1,26 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
+import { MercadoPagoConfig, Payment } from "mercadopago";
 import { db } from "@/lib/db";
+import cuid from "cuid"; // Asegúrate de que tengas este paquete instalado
+
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN!,
+});
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+  const body = await request.json();
+  const paymentId = body.data.id;
 
-    if (body.type === "payment") {
-      const { id, status } = body.data;
+  const payment = await new Payment(client).get({ id: paymentId });
 
-      const appointment = await db.appointment.findUnique({ where: { id } });
+  console.log("Respuesta del pago:", payment);
 
-      if (appointment) {
-        await db.appointment.update({
-          where: { id },
-          data: { isAvailable: status === "approved" },
-        });
-      }
+  if (payment.status === "approved") {
+    const firstItem = payment.additional_info?.items[0];
+
+    if (firstItem) {
+      const { userName, userEmail, date, time, services } = payment.metadata;
+      const newAppointment = await db.appointment.create({
+        data: {
+          id: cuid(),
+          userName,
+          userEmail,
+          date,
+          time,
+          isAvailable: false,
+          services: services.join(", "),
+        },
+      });
+
+      await db.appointment.update({
+        where: { id: firstItem.id },
+        data: {
+          isAvailable: false,
+        },
+      });
+
+      console.log("Cita guardada:", newAppointment);
+    } else {
+      console.error("No se encontraron items en la respuesta del pago");
+      return new NextResponse(null, { status: 400 });
     }
-
-    return new NextResponse(null, { status: 200 });
-  } catch (error) {
-    console.error("Error processing notification:", error);
-    return new NextResponse(null, { status: 403 });
+  } else {
+    console.error("El pago no está aprobado:", payment.status);
+    return new NextResponse(null, { status: 400 });
   }
+
+  return new NextResponse(null, { status: 200 });
 }

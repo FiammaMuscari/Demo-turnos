@@ -1,50 +1,40 @@
 "use server";
 
-import cuid from "cuid";
 import * as z from "zod";
 import { AppointmentSchema } from "@/schemas";
-import { db } from "@/lib/db";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN!,
 });
-
+interface Service {
+  id: string;
+  name: string;
+  price: string;
+}
 export const payment = async (
   values: z.infer<typeof AppointmentSchema>,
   totalPrice: number,
-  p0: { text: string }
-): Promise<{ appointment: any; paymentUrl: string }> => {
+  selectedServices: Service[]
+) => {
   try {
     const validatedFields = AppointmentSchema.safeParse(values);
-
     if (!validatedFields.success) {
       throw new Error("Invalid fields!");
     }
 
-    const newAppointment = await db.appointment.create({
-      data: {
-        id: cuid(),
-        userName: values.userName,
-        userEmail: values.userEmail,
-        date: values.date,
-        time: values.time,
-        isAvailable: false,
-        services: values.services,
-      },
-    });
+    const items = selectedServices.map((service) => ({
+      id: service.id,
+      title: "Turno",
+      quantity: 1,
+      unit_price: totalPrice,
+      description: `Cita para ${values.userName} el ${values.date} a las ${values.time}`,
+      category_id: values.time,
+    }));
 
     const preference = await new Preference(client).create({
       body: {
-        items: [
-          {
-            id: "turno",
-            title: "Pago de Turno",
-            quantity: 1,
-            unit_price: totalPrice,
-          },
-        ],
-        notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/notification`,
+        items,
         back_urls: {
           success: `${process.env.NEXT_PUBLIC_APP_URL}/mis-turnos`,
           failure: `${process.env.NEXT_PUBLIC_APP_URL}/error`,
@@ -54,11 +44,10 @@ export const payment = async (
     });
 
     return {
-      appointment: newAppointment,
       paymentUrl: preference.init_point!,
     };
   } catch (error) {
-    console.error("Error creating appointment or payment preference:", error);
-    throw new Error("Could not create appointment and payment preference");
+    console.error("Error creando la preferencia de pago:", error);
+    throw new Error("No se pudo crear la preferencia de pago");
   }
 };
