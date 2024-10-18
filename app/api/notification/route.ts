@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Payment } from "mercadopago";
-import { db } from "@/lib/db";
+import { createAppointment } from "@/actions/appointments"; // Importar la acción de crear cita
 import cuid from "cuid";
 
 const client = new MercadoPagoConfig({
@@ -26,25 +26,28 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const newAppointment = await db.appointment.create({
-          data: {
-            id: cuid(),
-            userName,
-            userEmail,
-            date: new Date(date).toString(),
-            time,
-            isAvailable: false,
-            services: services.join(", "),
-          },
-        });
-        console.log("Cita guardada:", newAppointment);
+        const appointmentData = {
+          userName,
+          userEmail,
+          date: new Date(date).toString(),
+          time,
+          services,
+        };
+        const result = await createAppointment(appointmentData);
+
+        if (result.error) {
+          console.error("Error al crear la cita:", result.error);
+          return new NextResponse(null, { status: 500 });
+        }
+
+        console.log("Cita guardada:", result.data);
+        return new NextResponse(null, { status: 200 });
       } catch (error) {
         console.error("Error al crear la cita:", error);
         return new NextResponse(null, { status: 500 });
       }
-
-      return new NextResponse(null, { status: 200 });
     } else {
+      console.error("Pago no aprobado:", payment.status);
       return new NextResponse(null, { status: 400 });
     }
   } catch (error) {

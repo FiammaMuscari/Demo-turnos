@@ -7,14 +7,15 @@ import { MercadoPagoConfig, Preference } from "mercadopago";
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN!,
 });
+
 interface Service {
   id: string;
   name: string;
   price: string;
 }
+
 export const payment = async (
   values: z.infer<typeof AppointmentSchema>,
-  totalPrice: number,
   selectedServices: Service[]
 ) => {
   try {
@@ -47,8 +48,10 @@ export const payment = async (
           time: values.time,
           services: values.services,
         },
+        notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/notification`,
       },
     });
+
     console.log("Preferencia de pago creada:", preference);
     return {
       paymentUrl: preference.init_point!,

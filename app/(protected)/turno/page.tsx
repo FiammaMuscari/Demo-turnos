@@ -111,11 +111,7 @@ const ClientPage: React.FC = () => {
       };
 
       console.log("Iniciando el pago...");
-      const { paymentUrl } = await payment(
-        updatedValues,
-        totalPrice,
-        selectedServices
-      );
+      const { paymentUrl } = await payment(updatedValues, selectedServices);
       console.log("URL de pago recibida:", paymentUrl);
       window.location.href = paymentUrl;
     } catch (error) {
