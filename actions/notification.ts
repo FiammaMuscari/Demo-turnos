@@ -1,19 +1,37 @@
-"use server";
+import { NextApiRequest, NextApiResponse } from "next";
+import { createAppointment } from "@/actions/appointments";
+import { MercadoPagoConfig, Payment } from "mercadopago";
 
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN!,
+});
 
-export async function notification(request: NextRequest) {
-  const body = await request.json();
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const paymentId = req.body.data.id;
+  const payment = await new Payment(client).get({ id: paymentId });
 
-  if (body.type === "payment") {
-    const { id, status } = body.data;
+  if (payment.status === "approved") {
+    const { userName, userEmail, date, time, services } = payment.metadata;
 
-    await db.appointment.update({
-      where: { id },
-      data: { isAvailable: status === "approved" },
-    });
+    const appointmentData = {
+      userName,
+      userEmail,
+      date,
+      time,
+      services,
+    };
+
+    const appointmentResult = await createAppointment(appointmentData);
+
+    if (appointmentResult.error) {
+      return res.status(500).json({ error: appointmentResult.error });
+    }
+
+    return res.status(200).json({ success: true });
   }
 
-  return new NextResponse(null, { status: 200 });
+  return res.status(400).json({ error: "Pago no aprobado" });
 }
