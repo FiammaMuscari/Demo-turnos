@@ -107,7 +107,13 @@ const ClientPage: React.FC = () => {
         totalPrice: totalPrice,
       };
 
-      const { paymentUrl } = await payment(updatedValues, totalPrice, selectedServices);
+      console.log("Iniciando el pago...");
+      const { paymentUrl } = await payment(
+        updatedValues,
+        totalPrice,
+        selectedServices
+      );
+      console.log("URL de pago recibida:", paymentUrl);
       window.location.href = paymentUrl;
     } catch (error) {
       console.error("Error durante el pago:", error);

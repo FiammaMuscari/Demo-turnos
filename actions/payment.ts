@@ -42,7 +42,7 @@ export const payment = async (
         auto_return: "approved",
       },
     });
-
+    console.log("Preferencia de pago creada:", preference);
     return {
       paymentUrl: preference.init_point!,
     };
