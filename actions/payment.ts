@@ -27,7 +27,7 @@ export const payment = async (
       id: service.id,
       title: "Turno",
       quantity: 1,
-      unit_price: totalPrice,
+      unit_price: parseFloat(service.price),
       description: `Cita para ${values.userName} el ${values.date} a las ${values.time}`,
       category_id: values.time,
     }));
