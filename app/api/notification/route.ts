@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   console.log("Respuesta del pago:", payment);
 
   if (payment.status === "approved") {
-    const firstItem = payment.additional_info?.items[0];
+    const firstItem = payment.additional_info?.items![0];
 
     if (firstItem) {
       const { userName, userEmail, date, time, services } = payment.metadata;
