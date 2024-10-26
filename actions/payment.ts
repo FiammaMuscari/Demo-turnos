@@ -25,7 +25,7 @@ export const payment = async (
       throw new Error("Invalid fields!");
     }
     const user = await currentUser();
-    
+
     const items = selectedServices.map((service) => ({
       id: service.id,
       title: "Turno",
@@ -41,6 +41,7 @@ export const payment = async (
         back_urls: {
           success: `${process.env.NEXT_PUBLIC_APP_URL}/mis-turnos`,
           failure: `${process.env.NEXT_PUBLIC_APP_URL}/error`,
+          pending: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/pending`,
         },
         auto_return: "approved",
         notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/notification`,
