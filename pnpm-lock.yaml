@@ -6,13 +6,13 @@ settings:
 
 dependencies:
   '@auth/prisma-adapter':
-    specifier: ^1.0.12
+    specifier: ^1.0.14
     version: 1.0.14(@prisma/client@5.8.1)
   '@hookform/resolvers':
-    specifier: ^3.3.3
+    specifier: ^3.3.4
     version: 3.3.4(react-hook-form@7.49.3)
   '@prisma/client':
-    specifier: ^5.7.1
+    specifier: ^5.8.1
     version: 5.8.1(prisma@5.8.1)
   '@radix-ui/react-avatar':
     specifier: ^1.0.4
@@ -54,37 +54,37 @@ dependencies:
     specifier: ^0.7.0
     version: 0.7.0
   clsx:
-    specifier: ^2.0.0
+    specifier: ^2.1.0
     version: 2.1.0
   cuid:
     specifier: ^3.0.0
     version: 3.0.0
   date-fns:
-    specifier: ^3.1.0
+    specifier: ^3.2.0
     version: 3.2.0
   mercadopago:
-    specifier: ^2.0.7
-    version: 2.0.7
+    specifier: ^2.0.15
+    version: 2.0.15
   next:
     specifier: 14.0.4
     version: 14.0.4(react-dom@18.2.0)(react@18.2.0)
   next-auth:
-    specifier: ^5.0.0-beta.4
+    specifier: 5.0.0-beta.4
     version: 5.0.0-beta.4(next@14.0.4)(react@18.2.0)
   next-themes:
     specifier: ^0.2.1
     version: 0.2.1(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
   react:
-    specifier: ^18
+    specifier: ^18.2.0
     version: 18.2.0
   react-day-picker:
     specifier: ^8.10.0
     version: 8.10.0(date-fns@3.2.0)(react@18.2.0)
   react-dom:
-    specifier: ^18
+    specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
   react-hook-form:
-    specifier: ^7.49.2
+    specifier: ^7.49.3
     version: 7.49.3(react@18.2.0)
   react-icons:
     specifier: ^4.12.0
@@ -116,37 +116,37 @@ devDependencies:
     specifier: ^2.4.6
     version: 2.4.6
   '@types/node':
-    specifier: ^20
+    specifier: ^20.11.2
     version: 20.11.2
   '@types/react':
-    specifier: ^18
+    specifier: ^18.2.48
     version: 18.2.48
   '@types/react-dom':
-    specifier: ^18
+    specifier: ^18.2.18
     version: 18.2.18
   '@types/uuid':
     specifier: ^9.0.7
     version: 9.0.7
   autoprefixer:
-    specifier: ^10.0.1
+    specifier: ^10.4.16
     version: 10.4.16(postcss@8.4.33)
   eslint:
-    specifier: ^8
+    specifier: ^8.56.0
     version: 8.56.0
   eslint-config-next:
     specifier: 14.0.4
     version: 14.0.4(eslint@8.56.0)(typescript@5.3.3)
   postcss:
-    specifier: ^8
+    specifier: ^8.4.33
     version: 8.4.33
   prisma:
-    specifier: ^5.7.1
+    specifier: ^5.8.1
     version: 5.8.1
   tailwindcss:
-    specifier: ^3.3.0
+    specifier: ^3.4.1
     version: 3.4.1
   typescript:
-    specifier: ^5
+    specifier: ^5.3.3
     version: 5.3.3
 
 packages:
@@ -1587,7 +1587,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.22.2
-      caniuse-lite: 1.0.30001576
+      caniuse-lite: 1.0.30001669
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -1656,7 +1656,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001576
+      caniuse-lite: 1.0.30001669
       electron-to-chromium: 1.4.630
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.22.2)
@@ -1686,8 +1686,8 @@ packages:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
     engines: {node: '>= 6'}
 
-  /caniuse-lite@1.0.30001576:
-    resolution: {integrity: sha512-ff5BdakGe2P3SQsMsiqmt1Lc8221NR1VzHj5jXN5vBny9A6fpze94HiVV/n7XRosOlsShJcvMv5mdnpjOGCEgg==}
+  /caniuse-lite@1.0.30001669:
+    resolution: {integrity: sha512-DlWzFDJqstqtIVx1zeSpIMLjunf5SmwOw0N2Ck/QSQdS8PLS4+9HrLaYei4w8BIAL7IB/UEDu889d8vhCTPA0w==}
 
   /chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
@@ -3052,8 +3052,8 @@ packages:
       semver: 6.3.1
     dev: false
 
-  /mercadopago@2.0.7:
-    resolution: {integrity: sha512-KFvRV8Ln7G8cyw+3TrOlTy7eZ1BWXFd8Mlyk06gU4iGx6n/07QwbJHQnJ6XqJzhXD1isZxar4qslvYmnJQZDLg==}
+  /mercadopago@2.0.15:
+    resolution: {integrity: sha512-sIV/Kow8i2raNrWT0CDjOLiEg92FiqgX55psWj4hEXcqmG3R9n5ST/yALN6awdgG0OzA/fq16YH0qYG/8y++Zg==}
     dependencies:
       node-fetch: 2.7.0
       uuid: 9.0.1
@@ -3192,7 +3192,7 @@ packages:
       '@next/env': 14.0.4
       '@swc/helpers': 0.5.2
       busboy: 1.6.0
-      caniuse-lite: 1.0.30001576
+      caniuse-lite: 1.0.30001669
       graceful-fs: 4.2.11
       postcss: 8.4.31
       react: 18.2.0
